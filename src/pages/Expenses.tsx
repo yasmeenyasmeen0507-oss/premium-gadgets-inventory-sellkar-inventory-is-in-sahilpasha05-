@@ -1,0 +1,207 @@
+import { useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
+import { useExpenses, Expense } from '@/hooks/useExpenses';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Plus, Pencil, Trash2, Receipt } from 'lucide-react';
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export default function Expenses() {
+  const { expenses, isLoading, addExpense, updateExpense, deleteExpense, totalExpenses } = useExpenses();
+  const [isOpen, setIsOpen] = useState(false);
+  const [editItem, setEditItem] = useState<Expense | null>(null);
+  const [formData, setFormData] = useState({
+    expense_name: '',
+    amount: '',
+  });
+
+  const resetForm = () => {
+    setFormData({ expense_name: '', amount: '' });
+    setEditItem(null);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) resetForm();
+  };
+
+  const handleEdit = (item: Expense) => {
+    setEditItem(item);
+    setFormData({
+      expense_name: item.expense_name,
+      amount: item.amount.toString(),
+    });
+    setIsOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+      expense_name: formData.expense_name,
+      amount: parseFloat(formData.amount) || 0,
+    };
+
+    if (editItem) {
+      updateExpense.mutate({ id: editItem.id, ...data });
+    } else {
+      addExpense.mutate(data);
+    }
+    handleOpenChange(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this expense?')) {
+      deleteExpense.mutate(id);
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
+            <p className="text-muted-foreground mt-1">Track your business expenses</p>
+          </div>
+          <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Expense
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editItem ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expense_name">Expense Name</Label>
+                  <Input
+                    id="expense_name"
+                    value={formData.expense_name}
+                    onChange={(e) => setFormData({ ...formData, expense_name: e.target.value })}
+                    placeholder="e.g., Rent, Utilities"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0"
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full gradient-primary">
+                  {editItem ? 'Update Expense' : 'Add Expense'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Summary Card */}
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-destructive flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-destructive-foreground" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Expenses</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalExpenses)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Expenses Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <p className="text-center py-8 text-muted-foreground">Loading...</p>
+            ) : expenses.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">
+                No expenses yet. Add your first expense!
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Expense Name</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenses.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.expense_name}</TableCell>
+                        <TableCell className="text-right font-semibold text-destructive">
+                          {formatCurrency(Number(item.amount))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}

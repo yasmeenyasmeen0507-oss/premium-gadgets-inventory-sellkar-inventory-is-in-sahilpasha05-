@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_balances: {
+        Row: {
+          account_name: string
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      balances_to_receive: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_name: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          expense_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          expense_name: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expense_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      phones_stock: {
+        Row: {
+          buying_price: number
+          created_at: string
+          id: string
+          phone_name: string
+          quantity: number
+          selling_price: number
+          updated_at: string
+        }
+        Insert: {
+          buying_price?: number
+          created_at?: string
+          id?: string
+          phone_name: string
+          quantity?: number
+          selling_price?: number
+          updated_at?: string
+        }
+        Update: {
+          buying_price?: number
+          created_at?: string
+          id?: string
+          phone_name?: string
+          quantity?: number
+          selling_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

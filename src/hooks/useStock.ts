@@ -3,22 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface PhoneStock {
-  id:  string;
-  phone_name:  string;
-  quantity: number;
-  buying_price: number;
+  id:   string;
+  phone_name:   string;
+  quantity:  number;
+  buying_price:  number;
   selling_price: number;
   vendor: string | null;
   purchase_date:  string | null;
-  created_at: string;
-  updated_at: string;
+  created_at:   string;
+  updated_at:  string;
 }
 
 export const VENDORS = [
-  'Vendor A',
-  'Vendor B',
-  'Vendor C',
-  'Vendor D',
+  'Sandeep',
+  'Abubakar',
+  'Website',
+  'Anees',
 ] as const;
 
 export type Vendor = typeof VENDORS[number];
@@ -28,9 +28,9 @@ export function useStock() {
 
   const { data: stock = [], isLoading } = useQuery({
     queryKey: ['phones_stock'],
-    queryFn: async () => {
+    queryFn:  async () => {
       const { data, error } = await supabase
-        . from('phones_stock')
+        .from('phones_stock')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -43,20 +43,17 @@ export function useStock() {
   });
 
   const addStock = useMutation({
-    mutationFn: async (item:  Omit<PhoneStock, 'id' | 'created_at' | 'updated_at' | 'selling_price'>) => {
+    mutationFn: async (item: Omit<PhoneStock, 'id' | 'created_at' | 'updated_at' | 'selling_price'>) => {
       console.log('Attempting to insert:', item);
       
-      // Explicitly provide all columns including selling_price
       const insertData = {
         phone_name: item.phone_name,
         quantity: item.quantity,
         buying_price: item.buying_price,
-        selling_price: 0, // Default value
-        vendor: item.vendor,
-        purchase_date: item.purchase_date,
+        selling_price: 0,
+        vendor: item. vendor,
+        purchase_date: item. purchase_date,
       };
-      
-      console.log('Insert data with all fields:', insertData);
       
       const { data, error } = await supabase
         .from('phones_stock')
@@ -71,15 +68,15 @@ export function useStock() {
       console.log('Insert successful:', data);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phones_stock'] });
+    onSuccess:  () => {
+      queryClient. invalidateQueries({ queryKey:  ['phones_stock'] });
       toast({ title: 'Success', description:  'Phone added to stock' });
     },
     onError: (error:  any) => {
-      console. error('Add stock mutation error:', error);
+      console.error('Add stock mutation error:', error);
       toast({ 
         title: 'Error', 
-        description: error?.message || 'Failed to add phone', 
+        description: error?. message || 'Failed to add phone', 
         variant: 'destructive' 
       });
     },
@@ -103,8 +100,8 @@ export function useStock() {
       console.log('Update successful:', data);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phones_stock'] });
+    onSuccess:  () => {
+      queryClient. invalidateQueries({ queryKey:  ['phones_stock'] });
       toast({ title: 'Success', description: 'Stock updated' });
     },
     onError: (error: any) => {
@@ -139,7 +136,19 @@ export function useStock() {
     },
   });
 
-  const totalStockValue = stock.reduce((sum, item) => sum + (item.quantity * item.buying_price), 0);
+  const totalStockValue = stock. reduce((sum, item) => sum + (item.quantity * item.buying_price), 0);
+
+  // Calculate vendor-wise totals
+  const vendorTotals = stock.reduce((acc, item) => {
+    if (item.vendor) {
+      if (! acc[item.vendor]) {
+        acc[item.vendor] = { count: 0, total: 0 };
+      }
+      acc[item.vendor].count += item.quantity;
+      acc[item.vendor].total += item.quantity * item.buying_price;
+    }
+    return acc;
+  }, {} as Record<string, { count: number; total:  number }>);
 
   return {
     stock,
@@ -148,5 +157,6 @@ export function useStock() {
     updateStock,
     deleteStock,
     totalStockValue,
+    vendorTotals,
   };
 }

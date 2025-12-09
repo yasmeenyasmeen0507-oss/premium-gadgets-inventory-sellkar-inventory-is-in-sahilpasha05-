@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Package, Filter, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Filter, X, Store } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
@@ -41,7 +41,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function Stock() {
-  const { stock, isLoading, addStock, updateStock, deleteStock, totalStockValue } = useStock();
+  const { stock, isLoading, addStock, updateStock, deleteStock, totalStockValue, vendorTotals } = useStock();
   const [isOpen, setIsOpen] = useState(false);
   const [editItem, setEditItem] = useState<PhoneStock | null>(null);
   const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ export default function Stock() {
     quantity: '',
     buying_price: '',
     vendor: '',
-    purchase_date:  new Date().toISOString().split('T')[0],
+    purchase_date: new Date().toISOString().split('T')[0],
   });
 
   // Filter states
@@ -68,13 +68,18 @@ export default function Stock() {
     });
   }, [stock, filterVendor, filterDateFrom, filterDateTo]);
 
+  // Calculate filtered total
+  const filteredTotal = useMemo(() => {
+    return filteredStock.reduce((sum, item) => sum + (item.quantity * item.buying_price), 0);
+  }, [filteredStock]);
+
   const resetForm = () => {
     setFormData({
-      phone_name: '',
+      phone_name:  '',
       quantity: '',
       buying_price: '',
       vendor: '',
-      purchase_date: new Date().toISOString().split('T')[0],
+      purchase_date:  new Date().toISOString().split('T')[0],
     });
     setEditItem(null);
   };
@@ -93,22 +98,21 @@ export default function Stock() {
   const handleEdit = (item: PhoneStock) => {
     setEditItem(item);
     setFormData({
-      phone_name: item. phone_name,
+      phone_name:  item.phone_name,
       quantity:  item.quantity.toString(),
       buying_price: item.buying_price.toString(),
       vendor: item.vendor || '',
-      purchase_date: item.purchase_date || new Date().toISOString().split('T')[0],
+      purchase_date: item. purchase_date || new Date().toISOString().split('T')[0],
     });
     setIsOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React. FormEvent) => {
     e.preventDefault();
     
-    // Validate vendor is selected
-    if (!formData.vendor) {
+    if (! formData.vendor) {
       toast({
-        title:  'Error',
+        title: 'Error',
         description: 'Please select a vendor',
         variant: 'destructive',
       });
@@ -116,14 +120,12 @@ export default function Stock() {
     }
 
     const data = {
-      phone_name: formData.phone_name,
-      quantity: parseInt(formData.quantity) || 0,
+      phone_name:  formData.phone_name,
+      quantity: parseInt(formData. quantity) || 0,
       buying_price: parseFloat(formData.buying_price) || 0,
       vendor: formData.vendor,
       purchase_date: formData.purchase_date,
     };
-
-    console.log('Form data being submitted:', data);
 
     if (editItem) {
       updateStock. mutate({ id: editItem. id, ...data });
@@ -135,18 +137,26 @@ export default function Stock() {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
-      deleteStock. mutate(id);
+      deleteStock.mutate(id);
     }
   };
 
-  const activeFiltersCount = (filterVendor !== 'all' ?  1 : 0) + 
+  const activeFiltersCount = (filterVendor !== 'all' ? 1 : 0) + 
                              (filterDateFrom ? 1 : 0) + 
                              (filterDateTo ? 1 : 0);
+
+  // Vendor colors for visual distinction
+  const vendorColors:  Record<string, string> = {
+    'Sandeep': 'bg-blue-500/10 text-blue-500',
+    'Abubakar':  'bg-green-500/10 text-green-500',
+    'Website': 'bg-purple-500/10 text-purple-500',
+    'Anees': 'bg-orange-500/10 text-orange-500',
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm: items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Stock Management</h1>
             <p className="text-muted-foreground mt-1">Manage your phone inventory</p>
@@ -231,7 +241,7 @@ export default function Stock() {
                     id="purchase_date"
                     type="date"
                     value={formData.purchase_date}
-                    onChange={(e) => setFormData({ ... formData, purchase_date: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
                     required
                   />
                 </div>
@@ -244,29 +254,68 @@ export default function Stock() {
           </Dialog>
         </div>
 
-        {/* Summary Card */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-                <Package className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Stock Value</p>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Total Stock Value */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Package className="w-5 h-5 text-primary" />
+                  <p className="text-sm font-medium text-muted-foreground">Total Stock</p>
+                </div>
                 <p className="text-2xl font-bold">{formatCurrency(totalStockValue)}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {filteredStock.length} of {stock.length} items shown
-                </p>
+                <p className="text-xs text-muted-foreground">{stock.length} items</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Vendor Totals */}
+          {VENDORS.map((vendor) => {
+            const vendorData = vendorTotals[vendor];
+            const colorClass = vendorColors[vendor] || 'bg-gray-500/10 text-gray-500';
+            
+            return (
+              <Card 
+                key={vendor} 
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  filterVendor === vendor ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => setFilterVendor(filterVendor === vendor ? 'all' : vendor)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-lg ${colorClass} flex items-center justify-center`}>
+                        <Store className="w-4 h-4" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">{vendor}</p>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {vendorData ?  formatCurrency(vendorData. total) : formatCurrency(0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {vendorData ? `${vendorData.count} items` : '0 items'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
         {/* Filters */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Filters</CardTitle>
+              <div>
+                <CardTitle>Filters</CardTitle>
+                {filterVendor !== 'all' && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Showing {filteredStock.length} items · Total: {formatCurrency(filteredTotal)}
+                  </p>
+                )}
+              </div>
               <div className="flex gap-2">
                 {activeFiltersCount > 0 && (
                   <Button
@@ -305,6 +354,11 @@ export default function Stock() {
                       {VENDORS.map((vendor) => (
                         <SelectItem key={vendor} value={vendor}>
                           {vendor}
+                          {vendorTotals[vendor] && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({vendorTotals[vendor]. count} items)
+                            </span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -364,7 +418,7 @@ export default function Stock() {
                   <TableBody>
                     {filteredStock.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item. phone_name}</TableCell>
+                        <TableCell className="font-medium">{item.phone_name}</TableCell>
                         <TableCell>
                           {item.vendor ?  (
                             <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">

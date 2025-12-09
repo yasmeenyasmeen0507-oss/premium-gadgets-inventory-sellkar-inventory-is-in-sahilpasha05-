@@ -3,13 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface PhoneStock {
-  id: string;
-  phone_name: string;
+  id:  string;
+  phone_name:  string;
   quantity: number;
   buying_price: number;
+  selling_price: number;
+  vendor: string | null;
+  purchase_date:  string | null;
   created_at: string;
   updated_at: string;
 }
+
+export const VENDORS = [
+  'Vendor A',
+  'Vendor B',
+  'Vendor C',
+  'Vendor D',
+] as const;
+
+export type Vendor = typeof VENDORS[number];
 
 export function useStock() {
   const queryClient = useQueryClient();
@@ -18,54 +30,112 @@ export function useStock() {
     queryKey: ['phones_stock'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('phones_stock')
+        . from('phones_stock')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as PhoneStock[];
+      if (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
+      return data as unknown as PhoneStock[];
     },
   });
 
   const addStock = useMutation({
-    mutationFn: async (item: Omit<PhoneStock, 'id' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase.from('phones_stock').insert(item);
-      if (error) throw error;
+    mutationFn: async (item:  Omit<PhoneStock, 'id' | 'created_at' | 'updated_at' | 'selling_price'>) => {
+      console.log('Attempting to insert:', item);
+      
+      // Explicitly provide all columns including selling_price
+      const insertData = {
+        phone_name: item.phone_name,
+        quantity: item.quantity,
+        buying_price: item.buying_price,
+        selling_price: 0, // Default value
+        vendor: item.vendor,
+        purchase_date: item.purchase_date,
+      };
+      
+      console.log('Insert data with all fields:', insertData);
+      
+      const { data, error } = await supabase
+        .from('phones_stock')
+        .insert(insertData)
+        .select();
+      
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+      
+      console.log('Insert successful:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phones_stock'] });
-      toast({ title: 'Success', description: 'Phone added to stock' });
+      toast({ title: 'Success', description:  'Phone added to stock' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to add phone', variant: 'destructive' });
+    onError: (error:  any) => {
+      console. error('Add stock mutation error:', error);
+      toast({ 
+        title: 'Error', 
+        description: error?.message || 'Failed to add phone', 
+        variant: 'destructive' 
+      });
     },
   });
 
   const updateStock = useMutation({
     mutationFn: async ({ id, ...item }: Partial<PhoneStock> & { id: string }) => {
-      const { error } = await supabase.from('phones_stock').update(item).eq('id', id);
-      if (error) throw error;
+      console.log('Attempting to update:', { id, item });
+      
+      const { data, error } = await supabase
+        .from('phones_stock')
+        .update(item)
+        .eq('id', id)
+        .select();
+      
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      console.log('Update successful:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phones_stock'] });
       toast({ title: 'Success', description: 'Stock updated' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to update stock', variant: 'destructive' });
+    onError: (error: any) => {
+      console.error('Update stock mutation error:', error);
+      toast({ 
+        title:  'Error', 
+        description: error?.message || 'Failed to update stock', 
+        variant: 'destructive' 
+      });
     },
   });
 
   const deleteStock = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('phones_stock').delete().eq('id', id);
-      if (error) throw error;
+      const { error } = await supabase. from('phones_stock').delete().eq('id', id);
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phones_stock'] });
-      toast({ title: 'Success', description: 'Phone removed from stock' });
+      toast({ title: 'Success', description:  'Phone removed from stock' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to delete phone', variant: 'destructive' });
+    onError: (error: any) => {
+      console.error('Delete stock mutation error:', error);
+      toast({ 
+        title: 'Error', 
+        description: error?.message || 'Failed to delete phone', 
+        variant: 'destructive' 
+      });
     },
   });
 

@@ -111,9 +111,9 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(item.selling_price)}</p>
+                      <p className="font-semibold">{formatCurrency(item.buying_price)}</p>
                       <p className="text-sm text-muted-foreground">
-                        Value: {formatCurrency(item.quantity * item.selling_price)}
+                        Value: {formatCurrency(item.quantity * item.buying_price)}
                       </p>
                     </div>
                   </div>

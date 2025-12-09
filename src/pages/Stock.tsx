@@ -38,11 +38,10 @@ export default function Stock() {
     phone_name: '',
     quantity: '',
     buying_price: '',
-    selling_price: '',
   });
 
   const resetForm = () => {
-    setFormData({ phone_name: '', quantity: '', buying_price: '', selling_price: '' });
+    setFormData({ phone_name: '', quantity: '', buying_price: '' });
     setEditItem(null);
   };
 
@@ -57,7 +56,6 @@ export default function Stock() {
       phone_name: item.phone_name,
       quantity: item.quantity.toString(),
       buying_price: item.buying_price.toString(),
-      selling_price: item.selling_price.toString(),
     });
     setIsOpen(true);
   };
@@ -68,7 +66,6 @@ export default function Stock() {
       phone_name: formData.phone_name,
       quantity: parseInt(formData.quantity) || 0,
       buying_price: parseFloat(formData.buying_price) || 0,
-      selling_price: parseFloat(formData.selling_price) || 0,
     };
 
     if (editItem) {
@@ -127,33 +124,18 @@ export default function Stock() {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buying_price">Buying Price (₹)</Label>
-                    <Input
-                      id="buying_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.buying_price}
-                      onChange={(e) => setFormData({ ...formData, buying_price: e.target.value })}
-                      placeholder="0"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="selling_price">Selling Price (₹)</Label>
-                    <Input
-                      id="selling_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.selling_price}
-                      onChange={(e) => setFormData({ ...formData, selling_price: e.target.value })}
-                      placeholder="0"
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="buying_price">Buying Price (₹)</Label>
+                  <Input
+                    id="buying_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.buying_price}
+                    onChange={(e) => setFormData({ ...formData, buying_price: e.target.value })}
+                    placeholder="0"
+                    required
+                  />
                 </div>
                 <Button type="submit" className="w-full gradient-primary">
                   {editItem ? 'Update Phone' : 'Add Phone'}
@@ -197,8 +179,7 @@ export default function Stock() {
                     <TableRow>
                       <TableHead>Phone Name</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Buy Price</TableHead>
-                      <TableHead className="text-right">Sell Price</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-right">Total Value</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -209,9 +190,8 @@ export default function Stock() {
                         <TableCell className="font-medium">{item.phone_name}</TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.buying_price)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.selling_price)}</TableCell>
                         <TableCell className="text-right font-semibold">
-                          {formatCurrency(item.quantity * item.selling_price)}
+                          {formatCurrency(item.quantity * item.buying_price)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

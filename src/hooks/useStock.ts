@@ -7,7 +7,6 @@ export interface PhoneStock {
   phone_name: string;
   quantity: number;
   buying_price: number;
-  selling_price: number;
   created_at: string;
   updated_at: string;
 }
@@ -70,7 +69,7 @@ export function useStock() {
     },
   });
 
-  const totalStockValue = stock.reduce((sum, item) => sum + (item.quantity * item.selling_price), 0);
+  const totalStockValue = stock.reduce((sum, item) => sum + (item.quantity * item.buying_price), 0);
 
   return {
     stock,

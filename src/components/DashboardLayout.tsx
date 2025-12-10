@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
   Smartphone, 
+  ShoppingCart,
   Users, 
   Wallet, 
   Receipt, 
@@ -22,9 +23,10 @@ interface DashboardLayoutProps {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/stock', label: 'Stock', icon: Smartphone },
-  { href: '/receivables', label: 'Receivables', icon: Users },
+  { href: '/sales', label: 'Sales', icon: ShoppingCart },
+  { href: '/receivables', label:  'Receivables', icon:  Users },
   { href: '/accounts', label: 'Accounts', icon: Wallet },
-  { href: '/expenses', label: 'Expenses', icon: Receipt },
+  { href: '/expenses', label:  'Expenses', icon: Receipt },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -53,7 +55,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           size="icon"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileMenuOpen ? <X className="w-5 h-5" /> :  <Menu className="w-5 h-5" />}
         </Button>
       </header>
 
@@ -72,8 +74,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "hover:bg-secondary"
+                      ?  "bg-primary text-primary-foreground" 
+                      :  "hover:bg-secondary"
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -83,7 +85,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             })}
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 px-4 py-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start gap-3 px-4 py-3 text-destructive hover:text-destructive hover: bg-destructive/10"
               onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
@@ -110,7 +112,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.href;
+            const isActive = location. pathname === item.href;
             return (
               <Link
                 key={item.href}

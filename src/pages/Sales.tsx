@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, ShoppingCart, TrendingUp, DollarSign, Filter, X, AlertCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, ShoppingCart, TrendingUp, DollarSign, Filter, X, AlertCircle, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -44,7 +44,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function Sales() {
-  const { sales, isLoading, addSale, updateSale, deleteSale, totalSales, totalProfit, totalCost } = useSales();
+  const { sales, isLoading, addSale, updateSale, deleteSale, totalSales, totalProfit, totalCost, totalExpenses } = useSales();
   const { stock } = useStock();
   const [isOpen, setIsOpen] = useState(false);
   const [editItem, setEditItem] = useState<Sale | null>(null);
@@ -52,11 +52,12 @@ export default function Sales() {
   const [formData, setFormData] = useState({
     phone_name: '',
     quantity: '1',
-    buying_price:  '',
-    selling_price: '',
+    buying_price:   '',
+    selling_price:  '',
+    expenses: '0',
     customer_name: '',
-    vendor:  '',
-    sale_date: new Date().toISOString().split('T')[0],
+    vendor:   '',
+    sale_date:  new Date().toISOString().split('T')[0],
     payment_status: 'paid' as 'paid' | 'pending' | 'partial',
     notes: '',
   });
@@ -84,12 +85,13 @@ export default function Sales() {
 
   const resetForm = () => {
     setFormData({
-      phone_name:  '',
+      phone_name:   '',
       quantity: '1',
-      buying_price: '',
+      buying_price:  '',
       selling_price: '',
+      expenses: '0',
       customer_name: '',
-      vendor: '',
+      vendor:   '',
       sale_date:  new Date().toISOString().split('T')[0],
       payment_status: 'paid',
       notes: '',
@@ -114,10 +116,11 @@ export default function Sales() {
     setEditItem(item);
     setSelectedStockId(item.stock_id || '');
     setFormData({
-      phone_name:  item.phone_name,
+      phone_name:   item.phone_name,
       quantity: item.quantity.toString(),
-      buying_price: item. buying_price.toString(),
+      buying_price: item.buying_price.toString(),
       selling_price: item.selling_price.toString(),
+      expenses: item.expenses.toString(),
       customer_name: item.customer_name || '',
       vendor: item.vendor || '',
       sale_date:  item.sale_date,
@@ -127,6 +130,12 @@ export default function Sales() {
     setIsOpen(true);
   };
 
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this sale?  This action cannot be undone.')) {
+      deleteSale. mutate(id);
+    }
+  };
+
   const handleStockSelect = (stockId: string) => {
     setSelectedStockId(stockId);
     const selected = stock.find(s => s.id === stockId);
@@ -134,7 +143,7 @@ export default function Sales() {
       setFormData({
         ...formData,
         phone_name: selected.phone_name,
-        buying_price: selected.buying_price.toString(),
+        buying_price: selected.buying_price. toString(),
         vendor: selected.vendor || '',
       });
     }
@@ -159,8 +168,9 @@ export default function Sales() {
       stock_id: selectedStockId || null,
       phone_name: formData.phone_name,
       quantity,
-      buying_price:  parseFloat(formData.buying_price) || 0,
+      buying_price: parseFloat(formData.buying_price) || 0,
       selling_price: parseFloat(formData. selling_price) || 0,
+      expenses: parseFloat(formData.expenses) || 0,
       customer_name: formData.customer_name || null,
       vendor: formData. vendor || null,
       sale_date: formData.sale_date,
@@ -174,12 +184,6 @@ export default function Sales() {
       addSale.mutate(data);
     }
     handleOpenChange(false);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this sale?  Stock quantity will be restored.')) {
-      deleteSale.mutate(id);
-    }
   };
 
   const activeFiltersCount = (filterPaymentStatus !== 'all' ?  1 : 0) + 
@@ -217,7 +221,7 @@ export default function Sales() {
               <DialogHeader>
                 <DialogTitle>{editItem ? 'Edit Sale' : 'Record New Sale'}</DialogTitle>
                 <DialogDescription>
-                  {editItem ? 'Update the sale details.' : 'Select a phone from stock and record the sale.'}
+                  {editItem ?  'Update the sale details.' : 'Select a phone from stock and record the sale.'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -235,7 +239,7 @@ export default function Sales() {
                       <SelectContent>
                         {stock.filter(item => item.quantity > 0).map((item) => (
                           <SelectItem key={item.id} value={item.id}>
-                            {item.phone_name} - Stock: {item.quantity} - Cost: {formatCurrency(item.buying_price)}
+                            {item.phone_name} - Stock: {item.quantity} - Cost: {formatCurrency(item. buying_price)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -261,7 +265,7 @@ export default function Sales() {
                       id="quantity"
                       type="number"
                       min="1"
-                      max={selectedStock?.quantity || 999}
+                      max={selectedStock?. quantity || 999}
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e. target.value })}
                       required
@@ -300,10 +304,24 @@ export default function Sales() {
                       min="0"
                       step="0.01"
                       value={formData.selling_price}
-                      onChange={(e) => setFormData({ ...formData, selling_price: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, selling_price: e.target. value })}
                       placeholder="Enter selling price"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expenses">Additional Expenses (₹)</Label>
+                    <Input
+                      id="expenses"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.expenses}
+                      onChange={(e) => setFormData({ ...formData, expenses: e.target.value })}
+                      placeholder="Transport, repairs, etc."
+                    />
+                    <p className="text-xs text-muted-foreground">This will be deducted from profit</p>
                   </div>
 
                   <div className="space-y-2">
@@ -352,8 +370,8 @@ export default function Sales() {
                 {/* Profit Preview */}
                 {formData.buying_price && formData.selling_price && formData.quantity && (
                   <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                    <p className="text-sm font-medium mb-3">Sale Summary:</p>
-                    <div className="grid grid-cols-4 gap-4 text-sm">
+                    <p className="text-sm font-medium mb-3">Sale Summary: </p>
+                    <div className="grid grid-cols-5 gap-3 text-sm">
                       <div>
                         <p className="text-muted-foreground">Total Cost</p>
                         <p className="font-semibold text-lg">{formatCurrency(parseFloat(formData.buying_price) * parseInt(formData.quantity))}</p>
@@ -363,15 +381,19 @@ export default function Sales() {
                         <p className="font-semibold text-lg text-blue-600">{formatCurrency(parseFloat(formData.selling_price) * parseInt(formData. quantity))}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Profit</p>
-                        <p className={`font-bold text-lg ${(parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) * parseInt(formData.quantity) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency((parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) * parseInt(formData.quantity))}
+                        <p className="text-muted-foreground">Expenses</p>
+                        <p className="font-semibold text-lg text-orange-600">{formatCurrency(parseFloat(formData.expenses || '0'))}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Net Profit</p>
+                        <p className={`font-bold text-lg ${((parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) * parseInt(formData.quantity) - parseFloat(formData.expenses || '0')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency((parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) * parseInt(formData.quantity) - parseFloat(formData.expenses || '0'))}
                         </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Margin</p>
-                        <p className={`font-semibold text-lg ${((parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) / parseFloat(formData.selling_price) * 100) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {((parseFloat(formData.selling_price) - parseFloat(formData.buying_price)) / parseFloat(formData.selling_price) * 100).toFixed(1)}%
+                        <p className={`font-semibold text-lg ${(((parseFloat(formData.selling_price) * parseInt(formData.quantity)) - (parseFloat(formData.buying_price) * parseInt(formData. quantity)) - parseFloat(formData.expenses || '0')) / (parseFloat(formData.selling_price) * parseInt(formData.quantity)) * 100) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {(((parseFloat(formData.selling_price) * parseInt(formData.quantity)) - (parseFloat(formData.buying_price) * parseInt(formData.quantity)) - parseFloat(formData.expenses || '0')) / (parseFloat(formData.selling_price) * parseInt(formData.quantity)) * 100).toFixed(1)}%
                         </p>
                       </div>
                     </div>
@@ -403,6 +425,20 @@ export default function Sales() {
             </CardContent>
           </Card>
 
+          <Card className="border-orange-500/20 bg-orange-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+                  <Receipt className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Expenses</p>
+                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalExpenses)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-green-500/20 bg-green-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -410,23 +446,9 @@ export default function Sales() {
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Profit</p>
+                  <p className="text-sm text-muted-foreground">Net Profit</p>
                   <p className="text-2xl font-bold text-green-600">{formatCurrency(totalProfit)}</p>
                   <p className="text-xs text-muted-foreground mt-1">{profitMargin}% margin</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-500/20 bg-orange-500/5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Cost</p>
-                  <p className="text-2xl font-bold">{formatCurrency(totalCost)}</p>
                 </div>
               </div>
             </CardContent>
@@ -436,11 +458,11 @@ export default function Sales() {
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-white" />
+                  <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg Profit/Sale</p>
-                  <p className="text-2xl font-bold">{sales.length > 0 ? formatCurrency(totalProfit / sales.length) : formatCurrency(0)}</p>
+                  <p className="text-sm text-muted-foreground">Total Cost</p>
+                  <p className="text-2xl font-bold">{formatCurrency(totalCost)}</p>
                 </div>
               </div>
             </CardContent>
@@ -560,7 +582,8 @@ export default function Sales() {
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Cost</TableHead>
                       <TableHead className="text-right">Selling Price</TableHead>
-                      <TableHead className="text-right">Profit</TableHead>
+                      <TableHead className="text-right">Expenses</TableHead>
+                      <TableHead className="text-right">Net Profit</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -581,12 +604,13 @@ export default function Sales() {
                         <TableCell className="text-right">{sale.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.buying_price)}</TableCell>
                         <TableCell className="text-right font-semibold">{formatCurrency(sale.selling_price)}</TableCell>
-                        <TableCell className={`text-right font-bold ${sale.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <TableCell className="text-right text-orange-600">{formatCurrency(sale.expenses)}</TableCell>
+                        <TableCell className={`text-right font-bold ${sale.profit >= 0 ?  'text-green-600' : 'text-red-600'}`}>
                           {formatCurrency(sale.profit)}
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(sale.payment_status)}`}>
-                            {sale.payment_status. charAt(0).toUpperCase() + sale.payment_status.slice(1)}
+                            {sale.payment_status.charAt(0).toUpperCase() + sale.payment_status.slice(1)}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -595,14 +619,16 @@ export default function Sales() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(sale)}
+                              title="Edit sale"
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleDelete(sale.id)}
+                              title="Delete sale"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

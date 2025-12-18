@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
             <Smartphone className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold">SellKar</span>
+          <span className="font-semibold">Premium gadgets</span>
         </div>
         <Button
           variant="ghost"
@@ -103,7 +103,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Smartphone className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg">SellKar</h1>
+              <h1 className="font-bold text-lg">premium gadgets</h1>
               <p className="text-xs text-muted-foreground">Stock Manager</p>
             </div>
           </div>

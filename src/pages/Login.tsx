@@ -48,7 +48,7 @@ export default function Login() {
             <Smartphone className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">SellKar Stock</CardTitle>
+            <CardTitle className="text-2xl font-bold">premium gadgets Stock</CardTitle>
             <CardDescription className="text-muted-foreground">
               Phone Stock Management System
             </CardDescription>
